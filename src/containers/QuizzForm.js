@@ -1,18 +1,52 @@
 import React from "react";
 import { Box, Button, TextField } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { addQuizz, EditQuizz } from "../store/actions";
 
 const QuizzForm = () => {
-  const [title, setTitle] = React.useState<string>("");
-  const [description, setDesciption] = React.useState<string>("");
-  const [score, setScore] = React.useState<string>("");
-  const [url, setURL] = React.useState<string>("");
-
+  const dispatch = useDispatch();
+  const _addQuizz = (quizz) => dispatch(addQuizz(quizz));
+  const _editQuizz = (quizzes, quizz) => dispatch(EditQuizz(quizzes, quizz));
   const navigate = useNavigate();
+  const _quizzes = useSelector((state) => {
+    return state.reducer.quizzes;
+  });
+  const params = useParams();
 
-  const handleSubmit = (e: React.FormEvent): void => {
+  const [title, setTitle] = React.useState("");
+  const [description, setDesciption] = React.useState("");
+  const [score, setScore] = React.useState("");
+  const [url, setURL] = React.useState("");
+
+  React.useEffect(() => {
+    if (params.id) {
+      const _quizz = _quizzes.filter((quizz) => {
+        return quizz.key == params.id;
+      })[0];
+      setTitle(_quizz.title);
+      setDesciption(_quizz.description);
+      setScore(_quizz.score);
+      setURL(_quizz.url);
+    } else {
+      setTitle("");
+      setDesciption("");
+      setScore("");
+      setURL("");
+    }
+  }, [params.id]);
+
+  const handleSubmit = (e) => {
     e.preventDefault();
-    console.log({ title, description, score, url });
+    if (params.id) {
+      const quizzes = _quizzes.filter((quizz) => quizz.key != params.id);
+      const quizz = { key: +params.id, title, description, score, url };
+      _editQuizz(quizzes, quizz);
+    } else {
+      const quizz = { title, description, score, url };
+      _addQuizz(quizz);
+    }
+
     navigate("/");
   };
 
